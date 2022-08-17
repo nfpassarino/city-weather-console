@@ -16,6 +16,7 @@ const main = async () => {
         await processOption(option, searcher);
         await continueToNext();
     }
+    searcher.writeHistory();
 };
 
 const processOption = async (option, searcher) => {
@@ -24,9 +25,11 @@ const processOption = async (option, searcher) => {
             const input = await readInput('Ciudad: ');
             const suggestedCities = await searcher.searchCity(input);
             const selectedCityId = await selectCity(suggestedCities);
+            if (selectedCityId === 0) return;
             const selectedCity = suggestedCities.find(
                 (city) => city.id === selectedCityId
             );
+            searcher.addHistory(selectedCity.name);
             const cityWeather = await searcher.getWeatherByCoordinates(
                 selectedCity.lon,
                 selectedCity.lat
@@ -34,7 +37,12 @@ const processOption = async (option, searcher) => {
             printCityData(selectedCity, cityWeather);
             break;
         case 2:
-            // mostrar historial
+            searcher.history
+                .map((cityName) => capitalizeString(cityName))
+                .forEach((cityName, i) => {
+                    const colorIndex = `${++i}`.green;
+                    console.log(`${colorIndex}. ${cityName}`);
+                });
             break;
     }
 };
@@ -48,6 +56,13 @@ const printCityData = (selectedCity = {}, cityWeather = {}) => {
     console.log('Mínima:'.green, cityWeather.min, '°C');
     console.log('Máxima:'.green, cityWeather.max, '°C');
     console.log('¿Cómo esta el clima?'.green, cityWeather.description);
+};
+
+const capitalizeString = (text = '') => {
+    let words = text.split(' ');
+    return words
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join(' ');
 };
 
 main();

@@ -1,9 +1,11 @@
+const fs = require('fs');
 const axios = require('axios');
 
 class Searcher {
     history = [];
+    pathFile = './db/database.json';
     constructor() {
-        // TODO leer db si existe
+        this.readHistory();
     }
     get paramsMapbox() {
         return {
@@ -55,6 +57,23 @@ class Searcher {
             };
         } catch (error) {
             return {};
+        }
+    }
+    addHistory(city = '') {
+        if (!this.history.includes(city.toLocaleLowerCase())) {
+            this.history.unshift(city.toLocaleLowerCase());
+        }
+    }
+    writeHistory() {
+        const payload = {
+            history: this.history,
+        };
+        fs.writeFileSync(this.pathFile, JSON.stringify(payload));
+    }
+    readHistory() {
+        if (fs.existsSync(this.pathFile)) {
+            const data = fs.readFileSync(this.pathFile, { enconding: 'utf-8' });
+            this.history = JSON.parse(data).history;
         }
     }
 }
